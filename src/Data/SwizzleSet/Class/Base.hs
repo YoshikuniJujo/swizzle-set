@@ -1,14 +1,17 @@
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables, TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric #-}
-{-# OPTIONS_GHC -Wall -fno-warn-tabs -fno-warn-orphans #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
+{-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
 
 module Data.SwizzleSet.Class.Base where
 
-import Data.SwizzleSet.Class.TH.Internal
+import Data.SwizzleSet.Class.TH
 
 concat <$> classSwizzle `mapM` [1 .. 26]
-concat <$> instanceSwizzleTuple `mapM` [1 .. 26]

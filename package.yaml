@@ -1,5 +1,5 @@
 name:                swizzle-set
-version:             0.1.0.0
+version:             0.2.0.0
 github:              "YoshikuniJujo/swizzle-set"
 license:             BSD-3-Clause
 author:              "Yoshikuni Jujo"
@@ -38,8 +38,8 @@ library:
   source-dirs: src
   exposed-modules:
     - Data.SwizzleSet
-    - Data.SwizzleSet.Class
     - Data.SwizzleSet.TH
+    - Data.SwizzleSet.Class
 
 tests:
   swizzle-set-test:

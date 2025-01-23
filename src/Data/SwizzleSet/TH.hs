@@ -1,7 +1,5 @@
 {-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE TemplateHaskellQuotes #-}
-{-# LANGUAGE BlockArguments, LambdaCase #-}
-{-# OPTIONS_GHC -Wall -fno-warn-tabs #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Data.SwizzleSet.TH (swizzleSet) where
 
@@ -11,25 +9,29 @@ import Data.Maybe
 import Data.List qualified as L
 import Data.Char
 
+import Data.SwizzleSet.Class ()
 import Data.SwizzleSet.Class.Pkg
+import Template.Tools
 
 swizzleSet :: String -> String -> DecsQ
-swizzleSet pfx nm = sequence [mkSwizzleSig i pfx nm, mkSwizzleFun pfx nm]
-	where i = maximum $ unalphabet <$> nm
+swizzleSet pfx nm = sequence [xyzttd pfx nm, xyztfn pfx nm]
 
-mkSwizzleSig :: Int -> String -> String -> Q Dec
-mkSwizzleSig i pfx nm = sigD (mkFunName pfx nm) . forallT [] (mkSwizzleSigContext i) $
-	mkSwizzleSigTup nm (mkName "a")
-	`arrT`
-	varT (mkName "a")
-	`arrT`
-	varT (mkName "a")
+xyzttd :: String -> String -> DecQ
+xyzttd pfx nm = newName "s" >>= \s -> newName `mapM` ((: "") <$> uvws) >>= \uvw ->
+	sigD (mkFunName pfx nm) $
+		forallT []
+			(cxt (zipWith appT (zipWith appT
+				(clsSwizzleXyz <$> nm) (tail $ scanr go (varT s) $ pairs uvw)) (varT <$> uvw)))
+			(varT s `arrT` tupT' (varT <$> uvw) `arrT`
+				foldr go (varT s) (pairs uvw))
+	where
+	go (xu, ul) = (`appT` ul) . (xu `appT`)
+	pairs uvw = zip (typX <$> nm) (varT <$> uvw)
+	uvws = crrPos ("xyz" ++ reverse ['a' .. 'w']) ("uvwxyz" ++ reverse ['a' .. 't']) <$> nm
 
-mkSwizzleSigContext :: Int -> CxtQ
-mkSwizzleSigContext i = cxt [clsSwizzle i `appT` varT (mkName "a")]
-
-mkSwizzleSigTup :: String -> Name -> TypeQ
-mkSwizzleSigTup cs a = tupT $ (<$> cs) \c -> typX c `appT` varT a
+clsSwizzleXyz :: Char -> TypeQ
+clsSwizzleXyz = clsSwizzle
+	. (+ 1) . fromJust . (`L.elemIndex` ("xyz" ++ reverse ['a' .. 'w']))
 
 clsSwizzle :: Int -> TypeQ
 clsSwizzle = conT . mkNameG_tc swizzleClassPkg "Data.SwizzleSet.Class.Base" . ("SwizzleSet" ++) . show
@@ -40,34 +42,20 @@ funX = varE . mkNameG_v swizzleClassPkg "Data.SwizzleSet.Class.Base" . (: "")
 typX :: Char -> TypeQ
 typX = conT . mkNameG_tc swizzleClassPkg "Data.SwizzleSet.Class.Base" . (: "") . toUpper
 
-tupT :: [TypeQ] -> TypeQ
-tupT = \case [t] -> t; ts -> foldl appT (tupleT $ length ts) ts
+crrPos :: Eq a => [a] -> [b] -> a -> b
+crrPos xs ys x = ys !! fromJust (x `L.elemIndex` xs)
 
-tupP' :: [PatQ] -> PatQ
-tupP' = \case [p] -> p; ps -> tupP ps
-
-unalphabet :: Char -> Int
-unalphabet c = fromJust (L.elemIndex c $ ("xyz" ++ reverse ['a' .. 'w'])) + 1
-
-infixr 7 `arrT`
-
-arrT :: TypeQ -> TypeQ -> TypeQ
-t1 `arrT` t2 = arrowT `appT` t1 `appT` t2
-
-mkSwizzleFun :: String -> String -> Q Dec
-mkSwizzleFun pfx nm =
-	((newName . (: "")) `mapM` nm) >>= \vs ->
+xyztfn :: String -> String -> DecQ
+xyztfn pfx nm =
+	newName "s" >>= \s -> newName `mapM` ((: "") <$> uvws) >>= \uvw ->
 	funD (mkFunName pfx nm) [
-	clause [tupP' $ varP <$> vs] (normalB $ mkSwizzleFunTup nm vs) []
-	]
-
-mkSwizzleFunTup :: String -> [Name] -> ExpQ
-mkSwizzleFunTup nm vs = foldr1 comE $ (<$> zip nm vs) \(c, v) -> funX c `appE` varE v
-
-infixr 7 `comE`
-
-comE :: ExpQ -> ExpQ -> ExpQ
-e1 `comE` e2 = infixE (Just e1) (varE '(.)) (Just e2)
+		clause [varP s, tupP' $ varP <$> uvw] (normalB $
+			foldr (\(xl, ul) -> (`appE` ul) . (xl `appE`)) (varE s) $
+				zip (funX <$> nm) (varE <$> uvw)
+--				zip (varE . mkName <$> ((: "") <$> nm)) (varE <$> uvw)
+			) [] ]
+	where
+	uvws = crrPos ("xyz" ++ reverse ['a' .. 'w']) ("uvwxyz" ++ reverse ['a' .. 't']) <$> nm
 
 mkFunName :: String -> String -> Name
 mkFunName pfx nm = mkName case pfx of

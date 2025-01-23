@@ -1,6 +1,7 @@
 module Data.SwizzleSet.Class (module Data.SwizzleSet.Class.Base) where
 
 import Data.SwizzleSet.Class.Base
+import Data.SwizzleSet.Instance.TupleBetween1And26 ()
 import Data.SwizzleSet.Instance.TupleBetween27And30 ()
 import Data.SwizzleSet.Instance.TupleBetween31And40 ()
 import Data.SwizzleSet.Instance.TupleBetween41And46 ()

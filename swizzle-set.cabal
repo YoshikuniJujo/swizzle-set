@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           swizzle-set
-version:        0.1.0.0
+version:        0.2.0.0
 synopsis:       Swizzle set functions
 description:    Please see the README on GitHub at <https://github.com/YoshikuniJujo/swizzle-set#readme>
 category:       Data
@@ -28,18 +28,20 @@ source-repository head
 library
   exposed-modules:
       Data.SwizzleSet
-      Data.SwizzleSet.Class
       Data.SwizzleSet.TH
+      Data.SwizzleSet.Class
   other-modules:
       Data.SwizzleSet.Class.Base
       Data.SwizzleSet.Class.Pkg
-      Data.SwizzleSet.Class.TH.Internal
+      Data.SwizzleSet.Class.TH
       Data.SwizzleSet.Instance.Tuple58OrMore
+      Data.SwizzleSet.Instance.TupleBetween1And26
       Data.SwizzleSet.Instance.TupleBetween27And30
       Data.SwizzleSet.Instance.TupleBetween31And40
       Data.SwizzleSet.Instance.TupleBetween41And46
       Data.SwizzleSet.Instance.TupleBetween47And52
       Data.SwizzleSet.Instance.TupleBetween53And57
+      Template.Tools
       Paths_swizzle_set
   autogen-modules:
       Paths_swizzle_set
